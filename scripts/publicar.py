@@ -69,8 +69,18 @@ def main():
         print("Fila vazia.")
         return
     falhou = False
+    descartes = Path("posts/descartados")
     for arq in arquivos:
         post = json.loads(arq.read_text(encoding="utf-8"))
+        # Evita rajada: post com "criado_em" (epoch UTC) há mais de 3h é descartado, não publicado.
+        if time.time() - post.get("criado_em", time.time()) > 3 * 3600 and not post.get("forcar"):
+            descartes.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(arq), descartes / arq.name)
+            img = Path(post["imagem"])
+            if img.exists():
+                shutil.move(str(img), descartes / img.name)
+            print(f"Descartado (antigo): {arq.name}")
+            continue
         try:
             link = publicar(post)
             post["publicado_em"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -93,5 +103,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-# retry: 2026-09-29T18:58:19
-# retry: 2026-09-29T19:22:58
