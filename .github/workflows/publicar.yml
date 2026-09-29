@@ -3,7 +3,7 @@ name: Publicar no Instagram
 on:
   push:
     branches: [main]
-    paths: ["posts/fila/**"]
+    paths: ["posts/fila/**", "scripts/publicar.py"]
   workflow_dispatch:
 
 permissions:

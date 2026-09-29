@@ -22,8 +22,8 @@ from pathlib import Path
 API = "https://graph.instagram.com/v21.0"
 REPO = os.environ.get("GITHUB_REPOSITORY", "wmatheuslacerda/congoapp-posts")
 BRANCH = os.environ.get("GITHUB_REF_NAME", "main")
-TOKEN = os.environ["IG_TOKEN"]
-IG_USER_ID = os.environ["IG_USER_ID"]
+TOKEN = os.environ["IG_TOKEN"].strip().strip("\"'")
+IG_USER_ID = os.environ["IG_USER_ID"].strip()
 
 FILA = Path("posts/fila")
 PUBLICADOS = Path("posts/publicados")
