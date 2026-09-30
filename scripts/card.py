@@ -1,4 +1,4 @@
-"""Gera cards 1080x1350 (4:5) da CongoApp com acabamento editorial.
+"""Gera cards 1080x1350 (4:5) e stories 1080x1920 ("formato":"story") da CongoApp com acabamento editorial.
 
 Uso (JSON na linha de comando ou arquivo):
   python3 scripts/card.py saida.jpg '{"layout":"amarelo","kicker":"...","titulo":"LINHA|LINHA|*DESTAQUE*","apoio":"...","faixa":"PEDIU, CHEGOU"}'
@@ -142,11 +142,30 @@ LAYOUTS = {"amarelo": layout_amarelo, "noite": layout_noite, "pergunta": layout_
 
 
 def gerar(saida, dados):
+    """formato "feed" (padrão, 1080x1350) ou "story" (1080x1920, card centralizado + chamada)."""
     corpo = LAYOUTS[dados.get("layout", "amarelo")](dados)
+    story = dados.get("formato") == "story"
+    altura = 1920 if story else 1350
+    if story:
+        fundo_escuro = dados.get("layout", "amarelo") != "amarelo"
+        cor_cta_fundo = AMARELO if fundo_escuro else PRETO
+        cor_cta_texto = PRETO if fundo_escuro else AMARELO
+        chamada = html.escape(dados.get("chamada", "Acesse pelo link do perfil"))
+        corpo = (
+            "<style>body{height:1920px}"
+            ".palco{position:absolute;left:0;top:250px;width:1080px;height:1350px}"
+            f".cta{{position:absolute;left:80px;right:80px;top:1640px;height:96px;border-radius:48px;"
+            f"background:{cor_cta_fundo};color:{cor_cta_texto};display:flex;align-items:center;"
+            "justify-content:center;gap:18px;font-family:Inter;font-weight:900;font-size:34px;"
+            "letter-spacing:1px;text-transform:uppercase}</style>"
+            f"<div class='palco'>{corpo}</div><div class='cta'>{chamada} <span>↑</span></div>"
+        )
     pagina = f"<!doctype html><html><head><meta charset='utf-8'><style>{css_base()}</style></head><body>{corpo}<div class='grao'></div></body></html>"
+    if story:
+        pagina = pagina.replace("height:1350px;position:relative", "height:1920px;position:relative")
     with sync_playwright() as p:
         nav = p.chromium.launch()
-        pg = nav.new_page(viewport={"width": 1080, "height": 1350})
+        pg = nav.new_page(viewport={"width": 1080, "height": altura})
         pg.set_content(pagina)
         pg.evaluate("document.fonts.ready")
         pg.wait_for_timeout(200)

@@ -1,11 +1,10 @@
 """Publica no Instagram @congoapp_ os posts da fila (posts/fila/*.json).
 
 Cada JSON da fila:
-{
-  "imagem": "posts/fila/2026-09-30-10h07.jpg",
-  "legenda": "texto + hashtags",
-  "pauta": "almoco"
-}
+  feed : {"tipo":"feed","imagem":"posts/fila/X.jpg","legenda":"...","criado_em":epoch}
+  story: {"tipo":"story","imagem":"posts/fila/X.jpg","criado_em":epoch}
+  reels: {"tipo":"reels","video":"posts/fila/X.mp4","capa":"posts/fila/X.jpg" (opcional),
+          "legenda":"...","audio_url":"https://..." (opcional, narração),"criado_em":epoch}
 
 Usa a API oficial do Instagram (login do Instagram), host graph.instagram.com.
 Segredos exigidos no GitHub: IG_TOKEN e IG_USER_ID.
@@ -44,22 +43,48 @@ def chamar(metodo, caminho, params):
         raise RuntimeError(f"{metodo} {caminho} -> {e.code}: {e.read().decode()}")
 
 
-def publicar(post):
-    imagem_url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{post['imagem']}"
-    container = chamar("POST", f"{IG_USER_ID}/media",
-                       {"image_url": imagem_url, "caption": post["legenda"]})["id"]
+def raw(caminho):
+    return f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{caminho}"
 
-    # Espera o Instagram processar a imagem
-    for _ in range(20):
+
+def publicar(post):
+    """tipo: "feed" (padrão, imagem), "story" (imagem 9:16) ou "reels" (vídeo 9:16)."""
+    tipo = post.get("tipo", "feed")
+    if tipo == "reels":
+        params = {"media_type": "REELS", "video_url": raw(post["video"]),
+                  "caption": post.get("legenda", ""), "share_to_feed": "true"}
+        if post.get("capa"):
+            params["cover_url"] = raw(post["capa"])
+        tentativas, pausa = 60, 5  # vídeo leva mais para processar
+    elif tipo == "story":
+        params = {"media_type": "STORIES", "image_url": raw(post["imagem"])}
+        tentativas, pausa = 20, 3
+    else:
+        params = {"image_url": raw(post["imagem"]), "caption": post["legenda"]}
+        tentativas, pausa = 20, 3
+    container = chamar("POST", f"{IG_USER_ID}/media", params)["id"]
+
+    for _ in range(tentativas):
         status = chamar("GET", container, {"fields": "status_code"})["status_code"]
         if status == "FINISHED":
             break
         if status == "ERROR":
-            raise RuntimeError(f"Instagram recusou a imagem {imagem_url}")
-        time.sleep(3)
+            raise RuntimeError(f"Instagram recusou a mídia ({tipo})")
+        time.sleep(pausa)
 
     midia = chamar("POST", f"{IG_USER_ID}/media_publish", {"creation_id": container})["id"]
-    return chamar("GET", midia, {"fields": "permalink"})["permalink"]
+    try:
+        return chamar("GET", midia, {"fields": "permalink"}).get("permalink") or f"story:{midia}"
+    except RuntimeError:
+        return f"{tipo}:{midia}"
+
+
+def mover_arquivos(post, destino):
+    for campo in ("imagem", "video", "capa"):
+        if post.get(campo) and Path(post[campo]).exists():
+            novo = destino / Path(post[campo]).name
+            shutil.move(post[campo], novo)
+            post[campo] = str(novo)
 
 
 def main():
@@ -76,9 +101,7 @@ def main():
         if time.time() - post.get("criado_em", time.time()) > 3 * 3600 and not post.get("forcar"):
             descartes.mkdir(parents=True, exist_ok=True)
             shutil.move(str(arq), descartes / arq.name)
-            img = Path(post["imagem"])
-            if img.exists():
-                shutil.move(str(img), descartes / img.name)
+            mover_arquivos(post, descartes)
             print(f"Descartado (antigo): {arq.name}")
             continue
         try:
@@ -86,11 +109,7 @@ def main():
             post["publicado_em"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             post["link"] = link
             print(f"Publicado: {link}")
-            imagem = Path(post["imagem"])
-            if imagem.exists():
-                destino = PUBLICADOS / imagem.name
-                shutil.move(str(imagem), destino)
-                post["imagem"] = str(destino)
+            mover_arquivos(post, PUBLICADOS)
             (PUBLICADOS / arq.name).write_text(
                 json.dumps(post, ensure_ascii=False, indent=2), encoding="utf-8")
             arq.unlink()
