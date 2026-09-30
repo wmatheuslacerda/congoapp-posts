@@ -67,6 +67,15 @@ def css_base():
     """
 
 
+HORA = re.compile(r"\b\d{1,2}\s*(h|hs|:\d{2})\b|\b(das|às|as)\s+\d{1,2}\b", re.I)
+
+
+def kicker(d, padrao):
+    """Nunca mostra horário no card: o post pode sair em outro minuto."""
+    k = d.get("kicker") or padrao
+    return padrao if HORA.search(k) else k
+
+
 def logo_html(tam):
     if LOGO.exists():
         b = base64.b64encode(LOGO.read_bytes()).decode()
@@ -83,7 +92,7 @@ def layout_amarelo(d):
     .apoio{{position:absolute;left:80px;width:640px;bottom:290px;font-weight:500;font-size:38px;line-height:1.28}}
     .seta{{position:absolute;right:80px;bottom:292px;width:118px;height:118px;border-radius:50%;background:{PRETO};
       color:{AMARELO};display:flex;align-items:center;justify-content:center;font-size:58px;font-weight:900}}</style>
-    <div class="meta"><span>{html.escape(d.get('kicker','Congonhinhas · PR'))}</span><span>{html.escape(d.get('num',''))}</span></div>
+    <div class="meta"><span>{html.escape(kicker(d, 'Congonhinhas · PR'))}</span><span></span></div>
     <div class="titulo">{titulo}</div>
     <div class="apoio">{marcar(d.get('apoio',''), '#fff')}</div>
     <div class="seta">→</div>
@@ -105,7 +114,7 @@ def layout_noite(d):
     .fita b{{font-size:34px}}
     .apoio{{position:absolute;left:80px;width:760px;bottom:170px;font-weight:500;font-size:36px;line-height:1.3;color:#CFCBC2}}
     .meta{{color:#8C8880}}.rodape{{color:#8C8880}}.marca{{color:#F4F1EA}}</style>
-    <div class="meta"><span>{html.escape(d.get('kicker','Congonhinhas · PR'))}</span><span>{html.escape(d.get('num',''))}</span></div>
+    <div class="meta"><span>{html.escape(kicker(d, 'Congonhinhas · PR'))}</span><span></span></div>
     <div class="titulo">{titulo}</div>
     <div class="fita">{repet}</div>
     <div class="apoio">{marcar(d.get('apoio',''), AMARELO)}</div>
@@ -122,7 +131,7 @@ def layout_pergunta(d):
       border-radius:28px;padding:44px 48px;font-weight:700;font-size:40px;line-height:1.25}}
     .resp small{{display:block;font-size:22px;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;opacity:.7}}
     .meta{{color:#8C8880}}.rodape{{color:#8C8880}}.marca{{color:#F4F1EA}}</style>
-    <div class="meta"><span>{html.escape(d.get('kicker','Pergunta do dia'))}</span><span>{html.escape(d.get('num',''))}</span></div>
+    <div class="meta"><span>{html.escape(kicker(d, 'Pergunta do dia'))}</span><span></span></div>
     <div class="titulo">{titulo}</div>
     <div class="resp"><small>{html.escape(d.get('rotulo','Resposta'))}</small>{marcar(d.get('apoio',''), '#fff')}</div>
     <div class="rodape"><div>{logo_html(64) or '<div class="marca">congo<span style="color:'+AMARELO+'">app</span></div>'}</div><div>@congoapp_</div></div>
