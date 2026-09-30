@@ -10,8 +10,8 @@ Uso:
 - A última cena (marca + chamada) é adicionada automaticamente.
 - Movimento: linhas sobem por trás de máscara (easeOutExpo, escalonadas),
   "respiração" de câmera, corte com varredura amarela entre cenas, grão por cima.
-- Áudio (narração) é mixado depois, no GitHub Actions (scripts/preparar_midia.py),
-  porque a nuvem do Claude não baixa arquivos do Higgsfield.
+- Narração: coloque o texto em "narracao" no JSON da fila; o GitHub Actions gera a voz
+  na ElevenLabs e mixa (scripts/preparar_midia.py).
 """
 import html
 import json

@@ -4,7 +4,7 @@ Cada JSON da fila:
   feed : {"tipo":"feed","imagem":"posts/fila/X.jpg","legenda":"...","criado_em":epoch}
   story: {"tipo":"story","imagem":"posts/fila/X.jpg","criado_em":epoch}
   reels: {"tipo":"reels","video":"posts/fila/X.mp4","capa":"posts/fila/X.jpg" (opcional),
-          "legenda":"...","audio_url":"https://..." (opcional, narração),"criado_em":epoch}
+          "legenda":"...","narracao":"texto falado" (opcional, ElevenLabs),"criado_em":epoch}
 
 Usa a API oficial do Instagram (login do Instagram), host graph.instagram.com.
 Segredos exigidos no GitHub: IG_TOKEN e IG_USER_ID.

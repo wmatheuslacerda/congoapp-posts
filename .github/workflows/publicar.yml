@@ -28,9 +28,12 @@ jobs:
           git config user.name "congoapp-bot"
           git config user.email "congoapp-bot@users.noreply.github.com"
 
-      - name: Mixar narração dos Reels (se houver)
+      - name: Narração ElevenLabs nos Reels (se houver)
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ vars.ELEVENLABS_VOICE_ID }}
         run: |
-          if ls posts/fila/*.json >/dev/null 2>&1 && grep -lq '"audio_url"' posts/fila/*.json; then
+          if ls posts/fila/*.json >/dev/null 2>&1 && grep -lq '"narracao"' posts/fila/*.json; then
             command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
             python scripts/preparar_midia.py
             git add -A posts
