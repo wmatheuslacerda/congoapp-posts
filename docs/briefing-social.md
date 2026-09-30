@@ -27,6 +27,8 @@ Posicionamento central:
 
 # O DELIVERY DA CIDADE.
 
+**Pronúncia:** quando a marca é FALADA (narração de Reels, áudio), CongoApp soa **"congoép"**, nunca "congo-app". O script de narração já converte automaticamente; na escrita (card e legenda) continua "CongoApp".
+
 Não somos uma plataforma distante tentando entrar em Congonhinhas.
 
 Somos uma marca feita para a rotina de Congonhinhas.

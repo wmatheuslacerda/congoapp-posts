@@ -9,6 +9,7 @@ Se a ElevenLabs falhar, o Reels segue sem narração.
 """
 import json
 import os
+import re
 import subprocess
 import urllib.request
 from pathlib import Path
@@ -39,7 +40,18 @@ def escolher_voz(post):
     return vozes[0]["voice_id"]
 
 
+# Pronúncia da marca: "CongoApp" tem que soar "congoép" (não "congo-app").
+PRONUNCIA = [(re.compile(r"@?congo[\s\-]*app_?", re.IGNORECASE), "Congoép")]
+
+
+def pronunciar(texto):
+    for padrao, fala in PRONUNCIA:
+        texto = padrao.sub(fala, texto)
+    return texto
+
+
 def narrar(texto, voz, destino):
+    texto = pronunciar(texto)
     audio = req(f"{API}/text-to-speech/{voz}?output_format=mp3_44100_128",
                 {"text": texto, "model_id": MODELO,
                  "voice_settings": {"stability": 0.45, "similarity_boost": 0.8, "style": 0.35,
